@@ -39,11 +39,6 @@ const steps = {
 
     core: () => util.compile('src/js/uikit-core.js', 'dist/js/uikit-core', {minify}),
     uikit: () => util.compile('src/js/uikit.js', 'dist/js/uikit', {minify}),
-    icons: async () => util.compile('build/wrapper/icons.js', 'dist/js/uikit-icons', {
-        minify,
-        name: 'icons',
-        replaces: {ICONS: await util.icons('{src/images,custom}/icons/*.svg')}}
-    ),
     tests: async () => util.compile('tests/js/index.js', 'tests/js/test', {
         minify,
         name: 'test',

@@ -1,6 +1,4 @@
 const fs = require('fs');
-const less = require('less');
-const SVGO = require('svgo');
 const rollup = require('rollup');
 const postcss = require('postcss');
 const uglify = require('uglify-js');
@@ -75,27 +73,6 @@ exports.uglify = async function (file) {
     );
 };
 
-exports.renderLess = async function (data, options) {
-    return postcss()
-        .use(postcss.plugin('calc', () =>
-            css => {
-                css.walk(node => {
-                    const {type} = node;
-
-                    if (type === 'decl') {
-                        node.value = postcss.list.space(node.value).map(value =>
-                            value.startsWith('calc(')
-                                ? value.replace(/(.)calc/g, '$1')
-                                : value
-                        ).join(' ');
-                    }
-                });
-            }
-        ))
-        .process((await less.render(data, options)).css)
-        .css;
-};
-
 exports.compile = async function (file, dest, {external, globals, name, aliases, replaces, minify = true}) {
 
     name = (name || '').replace(/[^\w]/g, '_');
@@ -137,42 +114,6 @@ exports.compile = async function (file, dest, {external, globals, name, aliases,
         exports.write(`${dest}.js`, code + (!minify ? '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' + Buffer.from(map.toString()).toString('base64') : '')),
         minify ? exports.write(`${dest}.min.js`, uglify.minify(code, {output: {preamble: exports.banner}}).code) : null
     ])[0];
-
-};
-
-exports.icons = async function (src) {
-
-    const svgo = new SVGO({
-
-        plugins: [
-            {removeViewBox: false},
-            {
-                cleanupNumericValues: {
-                    floatPrecision: 3
-                }
-            },
-            {convertPathData: false},
-            {convertShapeToPath: false},
-            {mergePaths: false},
-            {removeDimensions: false},
-            {removeStyleElement: false},
-            {removeScriptElement: false},
-            {removeUnknownsAndDefaults: false},
-            {removeUselessStrokeAndFill: false}
-        ]
-
-    });
-    const files = await exports.glob(src, {nosort: true});
-    const icons = await Promise.all(files.map(async file => {
-        const data = await exports.read(file);
-        const {data: svg} = await svgo.optimize(data);
-        return svg;
-    }));
-
-    return JSON.stringify(files.reduce((result, file, i) => {
-        result[basename(file, '.svg')] = icons[i];
-        return result;
-    }, {}), null, '    ');
 
 };
 

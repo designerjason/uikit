@@ -18,6 +18,8 @@
 /tests/js/test*
 /tests/css/*
 custom
+package-lock.json
+/wp-content
 themes.json
 .DS_Store
 /.idea
